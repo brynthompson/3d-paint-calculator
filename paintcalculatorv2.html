@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>3D Paint Calculator</title>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZF0ESH8CNL"></dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-ZF0ESH8CNL');
+  </script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
+    .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
+    h2 { text-align: center; }
+    label, select, input { display: block; margin: 10px 0; width: 100%; }
+    .row { display: flex; gap: 10px; }
+    .row input, .row select { flex: 1; }
+    button { padding: 10px; background: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    #result { margin-top: 20px; font-weight: bold; white-space: pre-line; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>3D Paint Calculator</h2>
+
+    <label for="beamType">Select Beam Type:</label>
+    <select id="beamType">
+      <option value="rectangular">Rectangular Beam</option>
+      <option value="cylindrical">Cylindrical Beam</option>
+      <option value="ibeam">I-Beam</option>
+      <option value="tbeam">T-Beam</option>
+      <option value="box">Box Section (Hollow Rectangular)</option>
+      <option value="pipe">Pipe (Hollow Circular)</option>
+      <option value="lbeam">L-Beam (Angle Iron)</option>
+      <option value="cbeam">Channel Beam (C-Beam)</option>
+    </select>
+
+    <label for="paintType">Select Paint Type:</label>
+    <select id="paintType">
+      <option value="paint1">Paint 1 (0.53 L/m²)</option>
+      <option value="paint2">Paint 2 (0.65 L/m²)</option>
+      <option value="paint3">Paint 3 (0.40 L/m²)</option>
+    </select>
+
+    <label>Length:</label>
+    <div class="row">
+      <input type="number" id="length" step="0.01">
+      <select id="lengthUnit">
+        <option value="m">m</option>
+        <option value="cm">cm</option>
+        <option value="mm">mm</option>
+        <option value="in">in</option>
+        <option value="ft">ft</option>
+      </select>
+    </div>
+
+    <label>Height:</label>
+    <div class="row">
+      <input type="number" id="height" step="0.01">
+      <select id="heightUnit">
+        <option value="mm" selected>mm</option>
+        <option value="cm">cm</option>
+        <option value="m">m</option>
+        <option value="in">in</option>
+        <option value="ft">ft</option>
+      </select>
+    </div>
+
+    <label>Width:</label>
+    <div class="row">
+      <input type="number" id="width" step="0.01">
+      <select id="widthUnit">
+        <option value="mm" selected>mm</option>
+        <option value="cm">cm</option>
+        <option value="m">m</option>
+        <option value="in">in</option>
+        <option value="ft">ft</option>
+      </select>
+    </div>
+
+    <button onclick="calculatePaint()">Calculate Paint Needed</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    function convertToMeters(value, unit) {
+      switch (unit) {
+        case 'mm': return value / 1000;
+        case 'cm': return value / 100;
+        case 'in': return value * 0.0254;
+        case 'ft': return value * 0.3048;
+        default: return value;
+      }
+    }
+
+    function getPaintCoverage(type) {
+      switch (type) {
+        case 'paint1': return 0.53;
+        case 'paint2': return 0.65;
+        case 'paint3': return 0.40;
+        default: return 0.53;
+      }
+    }
+
+    function calculatePaint() {
+      const type = document.getElementById('beamType').value;
+      const paintType = document.getElementById('paintType').value;
+      const length = convertToMeters(parseFloat(document.getElementById('length').value), document.getElementById('lengthUnit').value);
+      const width = convertToMeters(parseFloat(document.getElementById('width').value), document.getElementById('widthUnit').value);
+      const height = convertToMeters(parseFloat(document.getElementById('height').value), document.getElementById('heightUnit').value);
+
+      let surfaceArea = 0;
+
+      switch (type) {
+        case 'rectangular':
+          surfaceArea = 2 * (length * width + length * height + width * height);
+          break;
+        case 'cylindrical':
+          surfaceArea = 2 * Math.PI * (width / 2) * length + 2 * Math.PI * Math.pow(width / 2, 2);
+          break;
+        case 'ibeam':
+          const flangeThickness = width * 0.2;
+          const webHeight = height - 2 * flangeThickness;
+          surfaceArea = 2 * (length * width) + 2 * (length * flangeThickness) + 2 * (length * webHeight);
+          break;
+        case 'tbeam':
+          surfaceArea = 2 * (length * width) + 2 * (length * height) + 2 * (width * height);
+          break;
+        case 'box':
+          const wallThickness = 0.01;
+          const outerArea = 2 * (length * width + length * height + width * height);
+          const innerArea = 2 * (length * (width - 2 * wallThickness) + length * (height - 2 * wallThickness) + (width - 2 * wallThickness) * (height - 2 * wallThickness));
+          surfaceArea = outerArea + innerArea;
+          break;
+        case 'pipe':
+          const outerRadius = width / 2;
+          const innerRadius = outerRadius - 0.01;
+          surfaceArea = 2 * Math.PI * outerRadius * length + 2 * Math.PI * innerRadius * length;
+          break;
+        case 'lbeam':
+          surfaceArea = 2 * (length * width + length * height);
+          break;
+        case 'cbeam':
+          surfaceArea = 2 * (length * width + length * height + width * height / 2);
+          break;
+      }
+
+      const paintCoverage = getPaintCoverage(paintType);
+      const paintNeeded = surfaceArea * paintCoverage;
+
+      document.getElementById('result').innerText =
+        `Estimated Surface Area: ${surfaceArea.toFixed(2)} m²\nPaint Needed: ${paintNeeded.toFixed(2)} litres`;
+    }
+  </script>
+</body>
+</html>
